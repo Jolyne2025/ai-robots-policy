@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>wlw.de robots.txt AI 爬虫策略优化方案</title>
+<style>
+  :root {
+    --primary: #1a56db;
+    --primary-light: #e8effc;
+    --success: #057a55;
+    --success-light: #e5f7ee;
+    --danger: #b42318;
+    --danger-light: #fef0ef;
+    --warn: #b54708;
+    --warn-light: #fdf1e3;
+    --text: #1f2937;
+    --text-secondary: #6b7280;
+    --border: #e5e7eb;
+    --bg: #f9fafb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+  header { background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%); color: #fff; padding: 48px 24px 40px; margin-bottom: 40px; }
+  header .inner { max-width: 1100px; margin: 0 auto; }
+  header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  header .sub { opacity: 0.9; font-size: 15px; }
+  header .meta { margin-top: 16px; display: flex; gap: 24px; flex-wrap: wrap; font-size: 13px; opacity: 0.85; }
+  h2 { font-size: 22px; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); color: var(--primary); }
+  h3 { font-size: 17px; margin: 24px 0 10px; }
+  p { margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 14px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden; }
+  th { background: var(--primary-light); color: var(--primary); text-align: left; padding: 10px 12px; font-weight: 600; border-bottom: 2px solid var(--primary); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafc; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .badge-open { background: var(--success-light); color: var(--success); }
+  .badge-block { background: var(--danger-light); color: var(--danger); }
+  .badge-mixed { background: var(--warn-light); color: var(--warn); }
+  .badge-default { background: #f3f4f6; color: #4b5563; }
+  .card { background: #fff; border-radius: 12px; padding: 20px 24px; margin: 16px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-left: 4px solid var(--primary); }
+  .card.success { border-left-color: var(--success); }
+  .card.danger { border-left-color: var(--danger); }
+  .card.warn { border-left-color: var(--warn); }
+  .card h3 { margin-top: 0; }
+  .code-block { background: #111827; color: #d1d5db; border-radius: 8px; padding: 16px 20px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 13px; overflow-x: auto; margin: 12px 0 20px; line-height: 1.6; }
+  .code-block .c { color: #6b7280; }
+  .code-block .k { color: #93c5fd; }
+  .code-block .v { color: #fbbf24; }
+  ul, ol { padding-left: 22px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; }
+  .highlight { background: var(--warn-light); border-radius: 4px; padding: 1px 6px; font-weight: 600; color: var(--warn); }
+  .insight { background: var(--success-light); border: 1px solid #a7f3d0; border-radius: 12px; padding: 20px 24px; margin: 20px 0; }
+  .insight h3 { color: var(--success); margin-top: 0; }
+  .insight li { margin-bottom: 8px; }
+  .warning-box { background: var(--danger-light); border: 1px solid #fecaca; border-radius: 12px; padding: 20px 24px; margin: 20px 0; }
+  .warning-box h3 { color: var(--danger); margin-top: 0; }
+  .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 13px; }
+  .step { display: flex; gap: 16px; margin-bottom: 20px; }
+  .step-num { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
+  .step-body { flex: 1; }
+  .step-body h3 { margin: 0 0 6px; }
+  .small { font-size: 13px; color: var(--text-secondary); }
+  .decision { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 20px 24px; margin: 20px 0; }
+  .decision h3 { color: var(--warn); margin-top: 0; }
+  @media (max-width: 768px) { header h1 { font-size: 22px; } table { font-size: 13px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <h1>wlw.de robots.txt AI 爬虫策略优化方案</h1>
+    <div class="sub">补齐 AI 搜索/引用可见度短板,分级管控训练型爬虫,与 Europages 同步评估</div>
+    <div class="meta">
+      <span>📅 编制日期:2026-08-20</span>
+      <span>👤 编制人:Jolyne(SEO/GEO)</span>
+      <span>🌐 影响站点:wlw.de + europages.*(同模板)</span>
+      <span>📎 前置调研:ai_robots_research_20260820.html</span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+<h2>一、背景与目标</h2>
+<p>wlw.de 当前采用"<strong>默认全屏蔽 + 白名单放行</strong>"策略:未列名爬虫一律 <code>Disallow: /</code>,白名单内 17 个 UA(含 Google 系、bingbot、GPTbot、OAI-SearchBot、ChatGPT-User、PerplexityBot、Google-Extended、SemrushBot、Botify 等)放行全站。</p>
+<p>对标调研(13 个站点 + 行业研究)后发现,该策略存在 <span class="highlight">3 个可优化问题</span>,本方案目标:</p>
+<ul>
+  <li><strong>补齐可见度短板</strong>:让 2025-26 年新兴 AI 搜索/引用引擎(Claude、Grok、DeepSeek、Meta AI、Amazon Rufus 等)能抓取 wlw 内容,避免在 AI 引用渠道掉队;</li>
+  <li><strong>分级管控风险</strong>:区分"训练型"与"搜索引用型"AI 爬虫,防止内容被无约束免费训练;</li>
+  <li><strong>保护服务器资源</strong>:为高并发 AI 爬虫设置抓取限速。</li>
+</ul>
+
+<h2>二、现状诊断</h2>
+
+<div class="card danger">
+  <h3>问题 1:白名单严重滞后,新兴 AI 爬虫全部被默认屏蔽(核心问题)</h3>
+  <p>由于默认组为 <code>Disallow: /</code>,以下 <strong>2025-26 年主流 AI 爬虫当前全部无法抓取 wlw 内容</strong>:</p>
+  <table>
+    <tr><th>AI 产品</th><th>爬虫 UA</th><th>类型</th><th>引用流量潜力</th></tr>
+    <tr><td>Claude(Anthropic)</td><td>Claude-SearchBot / Claude-User / ClaudeBot / anthropic-ai</td><td>搜索+训练</td><td>⭐⭐⭐⭐ 主流 AI 搜索</td></tr>
+    <tr><td>Grok / xAI(马斯克)</td><td>GrokBot / xAI-Grok / Grok-DeepSearch</td><td>搜索+训练</td><td>⭐⭐⭐ X 生态高增长</td></tr>
+    <tr><td>DeepSeek</td><td>DeepSeekBot</td><td>搜索+训练</td><td>⭐⭐ 中国市场影响</td></tr>
+    <tr><td>Google 深度研究</td><td>Gemini-Deep-Research</td><td>搜索</td><td>⭐⭐⭐⭐ Gemini 引用</td></tr>
+    <tr><td>Meta AI</td><td>meta-externalagent / meta-externalfetcher</td><td>搜索+训练</td><td>⭐⭐⭐ 社交生态引用</td></tr>
+    <tr><td>Amazon Rufus</td><td>Amazonbot / amzn-searchbot / amzn-user</td><td>搜索</td><td>⭐⭐ B2B 采购场景</td></tr>
+    <tr><td>Apple</td><td>Applebot / Applebot-Extended</td><td>搜索+训练</td><td>⭐⭐ Apple 生态</td></tr>
+    <tr><td>字节跳动</td><td>Bytespider</td><td>训练</td><td>⭐ 豆包生态</td></tr>
+    <tr><td>Common Crawl</td><td>CCBot / AI2Bot / Ai2Bot-Dolma</td><td>训练</td><td>— 模型训练语料</td></tr>
+    <tr><td>其他</td><td>MistralAI-User / cohere-ai / DuckAssistBot / YouBot</td><td>混合</td><td>⭐ 长尾覆盖</td></tr>
+  </table>
+  <p class="small">影响:随着 B2B 采购决策者转向 AI 搜索(Claude 引用、Grok 等),wlw 在这些渠道将完全不可见,直接损失潜在询盘流量。</p>
+</div>
+
+<div class="card warn">
+  <h3>问题 2:训练型与搜索型不分级</h3>
+  <p>当前 GPTbot(OpenAI 训练爬虫)、Google-Extended(AI 训练/摘要)与搜索型 OAI-SearchBot / ChatGPT-User 同等全站放行。行业标杆 eBay 已将二者分组:训练型只放少量品牌页,搜索型与搜索引擎同权。</p>
+</div>
+
+<div class="card warn">
+  <h3>问题 3:无抓取限速,白名单无新增爬虫治理机制</h3>
+  <p>全站放行且无 <code>Crawl-delay</code>;白名单自建站以来未系统性更新,新增 AI 爬虫无评估流程。另外 wlw 与 europages.* 共用同一 robots 模板,<strong>任何改动影响两站</strong>,需一并评估。</p>
+</div>
+
+<h2>三、方案总览(推荐 B 档)</h2>
+<table>
+  <tr>
+    <th>档位</th>
+    <th>内容</th>
+    <th>工作量</th>
+    <th>风险</th>
+    <th>适用</th>
+  </tr>
+  <tr>
+    <td><strong>A 档:最小修复</strong></td>
+    <td>仅补齐白名单(新增 15+ 个 AI UA 并入现有白名单组)</td>
+    <td>低(0.5 天)</td>
+    <td>低</td>
+    <td>只想快速止血</td>
+  </tr>
+  <tr>
+    <td><strong>B 档:分级管控</strong> ⭐推荐</td>
+    <td>A 档全部内容 + 训练/搜索分组 + 关键爬虫限速</td>
+    <td>中(2-3 天)</td>
+    <td>低-中</td>
+    <td>既保可见度又控风险,匹配当前业务</td>
+  </tr>
+  <tr>
+    <td><strong>C 档:深度治理</strong></td>
+    <td>B 档全部内容 + 核心路径白名单(仅放公司页/类目页)+ 法律声明 + 季度 review 机制</td>
+    <td>高(1-2 周)</td>
+    <td>中</td>
+    <td>内容资产敏感度高、资源受限时</td>
+  </tr>
+</table>
+
+<div class="insight">
+  <h3>推荐理由(B 档)</h3>
+  <ul>
+    <li><strong>业务目标匹配</strong>:GEO 核心 KPI 是 AI 引用流量(此前 UC-475/UC-477 已证明 ChatGPT/Perplexity 引用是有价值渠道),B 档确保所有主流 AI 搜索爬虫全站可抓——引用可见度最大化;</li>
+    <li><strong>风险可控</strong>:仅对"纯训练型"(GPTbot、ClaudeBot、anthropic-ai、CCBot、Bytespider、cohere-ai、Applebot-Extended)做分级——可保留全站放行但加限速(温和版),或降级为仅核心路径(保守版),<strong>两版都给出规则,由团队拍板</strong>;</li>
+    <li><strong>改动集中</strong>:核心是重排现有白名单组 + 新增两个组,不触碰功能页 Disallow 清单,不影响 Googlebot/bingbot 行为,对自然搜索零风险;</li>
+    <li><strong>成本低</strong>:robots.txt 是 CMS 配置,发布链路与现有 SEO 变更一致,无需开发。</li>
+  </ul>
+</div>
+
+<h2>四、UA 分级决策矩阵(方案核心)</h2>
+<table>
+  <tr>
+    <th>级别</th>
+    <th>处理方式</th>
+    <th>UA 清单</th>
+    <th>理由</th>
+  </tr>
+  <tr>
+    <td rowspan="2"><span class="badge badge-open">S 级</span><br>搜索引用型<br>(全站放行)</td>
+    <td>并入现有白名单组,<code>Allow: /</code> + 现有全部 Disallow</td>
+    <td>OAI-SearchBot、ChatGPT-User、Claude-SearchBot、Claude-User、GrokBot、xAI-Grok、Grok-DeepSearch、DeepSeekBot、Gemini-Deep-Research、meta-externalagent、Amazonbot、amzn-searchbot、Applebot、DuckAssistBot、MistralAI-User</td>
+    <td>AI 搜索引用直接带来 GEO 流量,与搜索引擎同权;PerplexityBot(已有)同级别</td>
+  </tr>
+  <tr>
+    <td colspan="3" class="small">注:Google-Extended 特殊——虽用于 AI 训练/摘要,但影响 Google AI 搜索(AI Overviews/Experience)可见度,建议维持现状全站放行</td>
+  </tr>
+  <tr>
+    <td rowspan="2"><span class="badge badge-mixed">T 级</span><br>训练型<br>(二选一)</td>
+    <td><strong>温和版(默认推荐):</strong>全站放行 + <code>Crawl-delay: 20</code></td>
+    <td rowspan="2">GPTbot、ClaudeBot、anthropic-ai、CCBot、AI2Bot、Bytespider、cohere-ai、Applebot-Extended、SemrushBot(已有,建议加限速)</td>
+    <td>保留在模型训练语料中的存在感(利于未来 AI 原生检索),限速保护资源</td>
+  </tr>
+  <tr>
+    <td><strong>保守版:</strong>仅放行核心路径(<code>Allow: /de/firmen/</code>、<code>Allow: *utm_source=*</code>)+ <code>Crawl-delay: 20</code></td>
+    <td>对标 eBay:训练型不给全站,防止内容被无约束利用</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-block">X 级</span><br>不放行</td>
+    <td>维持默认屏蔽(不加入任何组)</td>
+    <td>YandexAdditionalBot 等长尾爬虫、未知名 AI 爬虫、Scrapy/python-requests 等工具爬虫</td>
+    <td>未验证流量价值,默认屏蔽,后续按需评估</td>
+  </tr>
+</table>
+
+<div class="decision">
+  <h3>⚠️ 关键决策点(需团队确认)</h3>
+  <ol>
+    <li><strong>训练型爬虫选温和版还是保守版?</strong>影响:温和版 = AI 模型训练语料含 wlw(未来 AI 原生检索优势,但内容被免费使用);保守版 = 只保引用流量,放弃训练语料存在感。行业风向:新闻媒体选保守,平台型(Amazon 除外)多选温和/放行。<strong>建议:温和版,先跑一个季度看数据。</strong></li>
+    <li><strong>是否加 Crawl-delay?</strong>robots.txt 的 Crawl-delay 仅部分爬虫遵守(Google 系不认,GPTBot/Claude 系认)。<strong>建议:加</strong>,对遵守者生效,不遵守的靠日志监控兜底。</li>
+    <li><strong>Europages 是否同步?</strong>两站同模板,建议同步发布,避免口径分裂。</li>
+  </ol>
+</div>
+
+<h2>五、落地规则示例(B 档 · 温和版)</h2>
+<p>在现有文件基础上:保留默认组与原有 Disallow 清单,重排白名单为三个组(仅示意关键差异,完整 Disallow 清单沿用现有文件):</p>
+<div class="code-block">
+<span class="c"># ── 组 1:搜索引擎 + S 级 AI 搜索引用型(全站放行)──</span><br>
+User-agent: Googlebot / Googlebot-Image / AdsBot-Google / Storebot-Google / Google-InspectionTool / GoogleOther / Mediapartners-Google / bingbot / YandexBot<br>
+User-agent: Google-Extended<br>
+User-agent: OAI-SearchBot / ChatGPT-User / GPTbot<br>
+User-agent: PerplexityBot / Perplexity-User<br>
+User-agent: Claude-SearchBot / Claude-User<br>
+User-agent: GrokBot / xAI-Grok / Grok-DeepSearch / DeepSeekBot / Gemini-Deep-Research<br>
+User-agent: meta-externalagent / Amazonbot / amzn-searchbot / Applebot / DuckAssistBot / MistralAI-User<br>
+User-agent: SemrushBot / Botify<br>
+Allow: /<br>
+Allow: *utm_source=*<br>
+Allow: */page/1 ... Allow: */page/9<br>
+<span class="c"># ...(沿用现有全部 Disallow 清单)</span><br>
+<br>
+<span class="c"># ── 组 2:T 级 训练型(全站放行 + 限速,温和版)──</span><br>
+User-agent: ClaudeBot / anthropic-ai / CCBot / AI2Bot / Bytespider / cohere-ai / Applebot-Extended<br>
+Allow: /<br>
+Allow: *utm_source=*<br>
+Disallow: <span class="c"># 沿用现有功能页 Disallow 清单</span><br>
+Crawl-delay: 20<br>
+<br>
+<span class="c"># ── 组 3:T 级 保守版(替换组 2 时使用:仅核心路径)──</span><br>
+User-agent: ClaudeBot / anthropic-ai / CCBot / AI2Bot / Bytespider / cohere-ai / Applebot-Extended<br>
+Allow: /de/firmen/<br>
+Allow: /de/firmenverzeichnis/<br>
+Allow: *utm_source=*<br>
+Disallow: /<br>
+Crawl-delay: 20<br>
+<span class="c"># 注:核心路径需与业务确认实际高价值目录(公司页/类目页),上线前用真实 URL 验证</span><br>
+<br>
+<span class="c"># ── 默认组(不变)──</span><br>
+User-agent: *<br>
+Disallow: /
+</div>
+
+<h2>六、实施步骤与时间线</h2>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <h3>决策确认(0.5 天)</h3>
+    <p>与团队对齐第四节三个决策点(训练型档位、Crawl-delay、Europages 同步);确认核心路径清单(若选保守版)。</p>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <h3>规则撰写与本地验证(1 天)</h3>
+    <p>按第五节模板撰写完整 robots.txt;用 <a href="https://www.google.com/webmasters/tools/robots-testing-tool">Google robots.txt Tester</a> 及模拟请求验证关键 URL(GPTBot/Claude-SearchBot/默认爬虫三视角)符合预期。</p>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <h3>发布与灰度(0.5-1 天)</h3>
+    <p>走 CMS 配置发布流程;建议先发布 wlw.de,观察 48h 无异常后再同步 europages.*;发布后确认 200 返回、无语法错误(检查空白行/编码)。</p>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <h3>观察与监控(上线后 2 周)</h3>
+    <p>监控爬虫日志:新增 UA 是否开始抓取、抓取量曲线、4xx/5xx 率、服务器资源水位;确认 Googlebot 行为无变化。</p>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">5</div>
+  <div class="step-body">
+    <h3>季度 review(长期机制)</h3>
+    <p>建立每季度 AI 爬虫清单复核(新增 UA 评估、引用流量复盘),纳入现有 SEO 周报/月报节奏。</p>
+  </div>
+</div>
+
+<h2>七、效果衡量(KPI)</h2>
+<table>
+  <tr>
+    <th>维度</th>
+    <th>指标</th>
+    <th>数据源</th>
+    <th>基线/目标</th>
+  </tr>
+  <tr>
+    <td>AI 引用可见度</td>
+    <td>AI 渠道引用次数、引用条目数(Claude/Grok/DeepSeek 新增口径)</td>
+    <td>GSC + Redash(GEO 渠道口径,channel='geo')+ 人工抽样</td>
+    <td>上线前 2 周打基线;上线后 T-3 跟踪,目标:Claude/Grok 从 0 开始起量</td>
+  </tr>
+  <tr>
+    <td>爬虫行为</td>
+    <td>新增 UA 抓取量、抓取频率、响应码分布</td>
+    <td>CDN/服务器访问日志</td>
+    <td>抓取量>0 且 4xx/5xx 率 < 5%</td>
+  </tr>
+  <tr>
+    <td>资源消耗</td>
+    <td>AI 爬虫占用带宽/请求占比、P95 响应时间</td>
+    <td>日志分析</td>
+    <td>响应时间无劣化;超限爬虫升级管控</td>
+  </tr>
+  <tr>
+    <td>自然搜索</td>
+    <td>Googlebot 抓取量、核心词排名、自然流量</td>
+    <td>GSC / GA4</td>
+    <td>与上线前持平(确认零影响)</td>
+  </tr>
+</table>
+
+<h2>八、风险与回退</h2>
+<table>
+  <tr>
+    <th>风险</th>
+    <th>概率</th>
+    <th>影响</th>
+    <th>缓解措施</th>
+  </tr>
+  <tr>
+    <td>robots.txt 语法错误导致全站不可抓</td>
+    <td>低</td>
+    <td>高</td>
+    <td>发布前 Tester 验证;发布后立即 curl 复核;保留上一版配置可秒级回退</td>
+  </tr>
+  <tr>
+    <td>新增爬虫抓取量突增,服务器压力</td>
+    <td>中</td>
+    <td>中</td>
+    <td>Crawl-delay 限速;日志阈值告警;超限者降级为屏蔽</td>
+  </tr>
+  <tr>
+    <td>训练型放行后内容被模型吸收</td>
+    <td>确定</td>
+    <td>中(业务判断)</td>
+    <td>这是策略选择而非事故;若团队倾向保守,切换组 3(保守版)即可</td>
+  </tr>
+  <tr>
+    <td>Europages 站点差异被忽略</td>
+    <td>低</td>
+    <td>中</td>
+    <td>发布前对比两站路径结构;核心路径清单按站确认</td>
+  </tr>
+</table>
+
+<h2>九、待确认事项清单</h2>
+<ol>
+  <li>训练型爬虫选 <strong>温和版(全站+限速)</strong> 还是 <strong>保守版(仅核心路径)</strong>?—— 建议温和版;</li>
+  <li>是否同步发布到 europages.*?—— 建议同步;</li>
+  <li>核心高价值路径清单(若选保守版):需与业务确认公司页/类目页路径;</li>
+  <li>robots.txt 由哪个团队维护(CMS 配置归属)、发布窗口;</li>
+  <li>是否需要把"AI 爬虫清单 review"纳入季度 SEO 例行。</li>
+</ol>
+
+<div class="footer">
+  <p><strong>关联文档:</strong>ai_robots_research_20260820.html(13 站点调研报告)、wlw.de / alibaba.com robots.txt 解析(2026-08-20 会话)</p>
+  <p><strong>数据口径:</strong>AI 引用流量分析沿用 SEO/GEO 日报口径(Redash + GSC,T-3 时效)</p>
+</div>
+
+</div>
+</body>
+</html>
