@@ -72,8 +72,8 @@
 
 <header>
   <div class="inner">
-    <h1>wlw.de robots.txt AI 爬虫策略优化方案</h1>
-    <div class="sub">训练型爬虫温和版(全站+Crawl-delay 10s)+ 公共语料爬虫拉黑 + Europages 同步 + 季度 review;Crawl-delay 调研与决策过程见关联文档</div>
+    <h1>wlw.de AI 爬虫策略优化方案(robots.txt + WAF)</h1>
+    <div class="sub">robots.txt:训练型温和版(全站+Crawl-delay 10s)+ 公共语料爬虫拉黑 + Europages 同步 + 季度 review;WAF:物理层四阶段方案(P0 现状确认 → P3 逃逸防护);调研与决策过程见关联文档</div>
     <div class="meta">
       <span>📅 编制日期:2026-08-20</span>
       <span>👤 编制人:Jolyne(SEO/GEO)</span>
@@ -353,6 +353,277 @@ Disallow: /
     <td>低</td>
     <td>中</td>
     <td>发布前对比两站路径结构;核心路径清单按站确认</td>
+  </tr>
+</table>
+
+<h2>九、WAF 物理层方案(robots 策略的强制执行层)</h2>
+<p>robots.txt 是君子协定(RFC 9309),只约束守规矩爬虫;<strong>伪装 UA 的商业采集只有 WAF 能防</strong>。数据流出四通道 × 两层防线覆盖矩阵:</p>
+<table>
+  <tr>
+    <th>流出通道</th>
+    <th>路径</th>
+    <th>robots.txt</th>
+    <th>WAF(物理层)</th>
+  </tr>
+  <tr>
+    <td><strong>A 守规矩直接爬取</strong></td>
+    <td>按 robots 声明的 UA 抓取</td>
+    <td><span class="badge badge-open">主防线</span> 分组管控(第四节)</td>
+    <td><span class="badge badge-open">双保险</span> Block/限速与 robots 口径对齐</td>
+  </tr>
+  <tr>
+    <td><strong>B 伪装直接爬取</strong></td>
+    <td>伪装浏览器 UA + 代理池 / 无头浏览器</td>
+    <td><span class="badge badge-block">无效</span> 不看 robots</td>
+    <td><span class="badge badge-open">唯一防线</span></td>
+  </tr>
+  <tr>
+    <td><strong>C 公共语料批发</strong></td>
+    <td>Common Crawl → 公开语料库(任何人可下载)</td>
+    <td><span class="badge badge-open">主防线</span> P 级拉黑 CCBot</td>
+    <td><span class="badge badge-open">兜底</span> CCBot 直接 Block</td>
+  </tr>
+  <tr>
+    <td><strong>D 模型输出提取</strong></td>
+    <td>从 AI 回答中挖联系方式</td>
+    <td><span class="badge badge-block">超出爬虫层</span></td>
+    <td><span class="badge badge-default">超出爬虫层</span>(决策:理性保留敞开)</td>
+  </tr>
+</table>
+
+<h3>9.1 现状实测:wlw 已有 AWS WAF,且为竞品中最严格(2026-08-21 实测)</h3>
+<p>以 curl(完整浏览器 UA)请求各站首页,对比边缘设施与拦截行为:</p>
+<table>
+  <tr>
+    <th>站点</th>
+    <th>边缘设施</th>
+    <th>拦截行为</th>
+  </tr>
+  <tr>
+    <td><strong>wlw.de</strong></td>
+    <td>AWS ELB + AWS WAF</td>
+    <td><span class="badge badge-block">全站 Challenge 202</span>(首页/公司页/任意 UA 一律拦截)</td>
+  </tr>
+  <tr>
+    <td>alibaba.com</td>
+    <td>隐藏</td>
+    <td><span class="badge badge-default">200 放行</span></td>
+  </tr>
+  <tr>
+    <td>dhgate.com</td>
+    <td>腾讯 EdgeOne</td>
+    <td><span class="badge badge-default">200 放行</span></td>
+  </tr>
+  <tr>
+    <td>made-in-china.com</td>
+    <td>腾讯 EdgeOne</td>
+    <td><span class="badge badge-default">302</span>(geo 跳转)</td>
+  </tr>
+  <tr>
+    <td>globalsources.com</td>
+    <td>—</td>
+    <td><span class="badge badge-default">200 放行</span></td>
+  </tr>
+  <tr>
+    <td>indiamart.com</td>
+    <td>GCLB</td>
+    <td><span class="badge badge-mixed">429 限速拦截</span></td>
+  </tr>
+  <tr>
+    <td>ebay.com</td>
+    <td>Akamai</td>
+    <td><span class="badge badge-mixed">403 拦截</span></td>
+  </tr>
+</table>
+<div class="card success">
+  <h3>现状解读</h3>
+  <ul>
+    <li><strong>低端采集已挡住</strong>:requests / httpx / curl 级脚本(不带 JS 引擎)无法通过 Challenge,通道 B 下半段对 wlw 已失效——这在 7 站中最严格;</li>
+    <li><strong>高端采集已绕过</strong>:Challenge 是 JS 挑战(proof of work),无头浏览器(Playwright/Puppeteer)可执行 JS 静默通过;第三方数据服务商(parse.bot / getprospect)公开在售 wlw 供应商数据即为实证;</li>
+    <li><strong>差距 = 本方案要补的</strong>:识别自动化浏览器与伪装流量,同时保证白名单 AI 爬虫与搜索引擎零误伤。</li>
+  </ul>
+</div>
+
+<h3>9.2 AWS WAF AI 爬虫管控能力盘点(官方博客 2026-02 更新)</h3>
+<p>AWS 官方将 AI bot 分为三类,与我们面对的威胁模型一一对应:</p>
+<table>
+  <tr>
+    <th>AI bot 类型</th>
+    <th>行为</th>
+    <th>对应我们的场景</th>
+  </tr>
+  <tr>
+    <td><strong>AI Scraper</strong></td>
+    <td>系统性采集内容训练模型</td>
+    <td>通道 A/C(GPTBot、CCBot 等自报身份者)</td>
+  </tr>
+  <tr>
+    <td><strong>AI Tool</strong></td>
+    <td>Function calling 单次取数</td>
+    <td>AI 搜索引用(OAI-SearchBot 等,收益侧)</td>
+  </tr>
+  <tr>
+    <td><strong>AI Agent</strong></td>
+    <td>Playwright / VM 自主导航多步交互(AWS 点名 Amazon Nova Act 用 Playwright、Anthropic Computer Use 用 VM)</td>
+    <td>通道 B 高端(伪装成浏览器的自主采集)</td>
+  </tr>
+</table>
+<p><strong>可用的 WAF 能力栈(由轻到重):</strong></p>
+<table>
+  <tr>
+    <th>能力</th>
+    <th>作用</th>
+    <th>说明</th>
+  </tr>
+  <tr>
+    <td><strong>Bot Control 规则组(Common)</strong></td>
+    <td>识别自报身份的爬虫</td>
+    <td><code>CategoryAI</code> 规则按签名验证识别 AI 爬虫(含 AI Agent);<code>SignalNonBrowserUserAgent</code> + <code>SignalAutomatedBrowser</code> 识别 Playwright 类自动化浏览器</td>
+  </tr>
+  <tr>
+    <td><strong>Bot Control(Targeted)</strong></td>
+    <td>识别伪装人类的高级 bot</td>
+    <td>流量指纹 + 行为基线,专防 evasive bot;对通道 B 高端(无头浏览器 + 代理池)是关键能力</td>
+  </tr>
+  <tr>
+    <td><strong>AI Activity Dashboard</strong></td>
+    <td>AI bot 可视化面板</td>
+    <td>2026-02 新增:bot 活动量、检测分类、信号一览(P1 基线观测直接可用)</td>
+  </tr>
+  <tr>
+    <td><strong>Challenge(现状在用)</strong></td>
+    <td>静默 JS 挑战提高算力成本</td>
+    <td>proof of work,无 token 返回 202;约 $0.40/百万响应,成本低</td>
+  </tr>
+  <tr>
+    <td><strong>CAPTCHA</strong></td>
+    <td>人机强校验</td>
+    <td>主流 LLM 被训练为不解 CAPTCHA(官方明确);约 $4/万次尝试,贵——仅高危路径使用</td>
+  </tr>
+  <tr>
+    <td><strong>Rate-based rule</strong></td>
+    <td>单 IP / IP 段速率强制限制</td>
+    <td>Crawl-delay 不遵守者的物理兜底(robots 层 10s 是声明,WAF 层是强制)</td>
+  </tr>
+  <tr>
+    <td><strong>蜜罐(Security Automations)</strong></td>
+    <td>诱捕遍历型爬虫</td>
+    <td>隐藏 endpoint,正常用户与守规矩爬虫不会访问;触发即拉黑 IP</td>
+  </tr>
+</table>
+
+<h3>9.3 robots 分组 × WAF 动作映射(两端口径统一)</h3>
+<p>核心原则:<strong>WAF 是 robots 策略的强制执行层,不是另一套策略</strong>——同一分组在两层保持一致:</p>
+<table>
+  <tr>
+    <th>robots 分组(第四节)</th>
+    <th>UA 例</th>
+    <th>WAF 动作</th>
+  </tr>
+  <tr>
+    <td><span class="badge badge-open">组 1 搜索型</span>(全站放行)</td>
+    <td>OAI-SearchBot、Claude-SearchBot、GrokBot 等</td>
+    <td><strong>显式放行规则</strong>(优先于 Challenge);AI 爬虫不执行 JS,被 Challenge = 引用归零</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-mixed">组 2 训练型</span>(放行 + Crawl-delay 10s)</td>
+    <td>GPTBot、ClaudeBot、SemrushBot 等</td>
+    <td>放行 + <strong>rate-based 限速兜底</strong>(超速 IP 强制降速,不遵守 Crawl-delay 者物理执行)</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-block">组 4 P 级公共语料型</span>(单独拉黑)</td>
+    <td>CCBot、AI2Bot、Ai2Bot-Dolma</td>
+    <td><strong>Block</strong>(双重拉黑:robots 声明 + WAF 强制,关死通道 C)</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-default">默认组</span>(未知名爬虫)</td>
+    <td>YandexAdditionalBot、杂牌 UA</td>
+    <td><strong>Challenge</strong>(现状已覆盖:无 JS 能力即拦)</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-block">伪装流量</span>(通道 B)</td>
+    <td>无头浏览器、代理池、UA 伪装</td>
+    <td>P3:Targeted 指纹 + SignalAutomatedBrowser + 蜜罐 + rate-based</td>
+  </tr>
+</table>
+
+<h3>9.4 四阶段实施(P0 → P3)</h3>
+<div class="step">
+  <div class="step-num">P0</div>
+  <div class="step-body">
+    <h3>现状确认(本周,需 infra 输入)</h3>
+    <p>5 项输入清单(可直接转发 infra):① web ACL 完整规则列表(顺序 + 动作);② Challenge 规则的匹配范围与豁免清单——<strong>Googlebot / 白名单 AI UA 是否有显式放行规则</strong>(官方文档无 Challenge 自动豁免搜索引擎的说明,若靠隐式机制需验证);③ Bot Control 是否启用(Common / Targeted / 未启用);④ WAF 日志留存(S3 / CloudWatch / Kinesis,时长);⑤ 架构确认:CloudFront 前置还是 ALB 直挂(影响 token 域与规则位置)。</p>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">P1</div>
+  <div class="step-body">
+    <h3>可见性(2 周)</h3>
+    <p>启用 Bot Control <strong>Common + Count 模式</strong>(只观察不拦截)+ AI Activity Dashboard,建立基线:谁在爬(AI bot 类别分布)、量级(请求占比)、伪装率(AutomatedBrowser 信号量)。若 P0 发现搜索引擎/AI 爬虫无显式放行规则,本阶段一并补上。</p>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">P2</div>
+  <div class="step-body">
+    <h3>分类管控(1 周)</h3>
+    <p>按 9.3 映射表把 Count 切换为实际动作:组 1 显式放行、组 2 限速、CCBot Block。每项动作先灰度(单规则 Count → 验证日志 → 切换)。</p>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">P3</div>
+  <div class="step-body">
+    <h3>逃逸防护(视 P1 基线决定)</h3>
+    <p>若伪装流量占比可观:启用 Bot Control <strong>Targeted</strong>(指纹基线)+ 蜜罐 endpoint + 高危路径(rate-based / CAPTCHA)。若 P1 显示伪装量可忽略,本阶段可暂缓——以数据决策,不预防性加码。</p>
+  </div>
+</div>
+
+<h3>9.5 成本与风险</h3>
+<table>
+  <tr>
+    <th>项</th>
+    <th>价格(以 AWS 定价页为准)</th>
+  </tr>
+  <tr>
+    <td>基础 WAF</td>
+    <td>$5/web ACL/月 + $1/规则/月 + $0.60/百万请求</td>
+  </tr>
+  <tr>
+    <td>Bot Control(Common)</td>
+    <td>+$10/web ACL/月 + 约 $1/百万请求</td>
+  </tr>
+  <tr>
+    <td>Bot Control(Targeted)</td>
+    <td>单价更高(以定价页为准)</td>
+  </tr>
+  <tr>
+    <td>Challenge(现状在用)</td>
+    <td>约 $0.40/百万响应</td>
+  </tr>
+  <tr>
+    <td>CAPTCHA</td>
+    <td>约 $4/万次尝试——仅高危路径使用,防成本失控</td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <th>风险</th>
+    <th>缓解</th>
+  </tr>
+  <tr>
+    <td><strong>误伤 SEO</strong>:Challenge 对 Googlebot 无官方自动豁免,误拦 = 索引灾难</td>
+    <td>P0 第一优先确认放行规则;P1 上线前用 Google Search Console 抓取统计回归验证</td>
+  </tr>
+  <tr>
+    <td><strong>误伤 GEO 引用</strong>:AI 爬虫不执行 JS,被 Challenge 即引用归零</td>
+    <td>组 1 UA 显式放行规则置于 Challenge 之前;上线后跟踪 GEO 渠道引用量(T-3)</td>
+  </tr>
+  <tr>
+    <td><strong>误伤真实用户</strong>:隐私模式 / 老浏览器 Challenge 失败</td>
+    <td>仅对可疑流量 Challenge(现状全站挑战可借 P1 数据收窄);token immunity time 降低重复挑战</td>
+  </tr>
+  <tr>
+    <td><strong>成本叠加</strong>:全站 Challenge + Bot Control + CAPTCHA</td>
+    <td>分层动作:Challenge 常规、CAPTCHA 仅高危路径;Targeted 视 P1 数据再启</td>
   </tr>
 </table>
 
@@ -718,7 +989,7 @@ Disallow: /
 
 
 <div class="footer">
-  <p><strong>附录·调研方法与局限:</strong>2026-08-20 通过直接抓取 13 个站点 robots.txt 原文分析;BBC、NYTimes、Wikipedia、Quora、Medium 等站点因访问超时未能获取原文,其策略以 Reuters Institute、Press Gazette、SEJ 公开研究数据补充(数据时点为 2023-2025)。robots.txt 只是内容控制第一层,各站还可能使用 meta robots、页面级 noai 标签、Cloudflare 等流量管控。</p>
+  <p><strong>附录·调研方法与局限:</strong>robots 部分 2026-08-20 通过直接抓取 13 个站点 robots.txt 原文分析;BBC、NYTimes、Wikipedia、Quora、Medium 等站点因访问超时未能获取原文,其策略以 Reuters Institute、Press Gazette、SEJ 公开研究数据补充(数据时点为 2023-2025)。WAF 部分 2026-08-21 以 curl(完整浏览器 UA)实测 7 站边缘响应,识别 WAF/CDN 指纹与拦截行为;能力盘点基于 AWS 官方文档与官方博客(2026-02 更新)。robots.txt 只是内容控制第一层,各站还可能使用 meta robots、页面级 noai 标签、WAF/CDN 等流量管控。</p>
   <p><strong>关联资料:</strong>wlw.de robots.txt 解析、alibaba.com robots.txt 解析、docs/alibaba_geo_*.png</p>
 </div>
 <div class="footer">
