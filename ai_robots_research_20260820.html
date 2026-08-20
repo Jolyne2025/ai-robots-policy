@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>主流网站 robots.txt 对 AI 搜索引擎爬虫策略调研报告</title>
+<style>
+  :root {
+    --primary: #1a56db;
+    --primary-light: #e8effc;
+    --success: #057a55;
+    --success-light: #e5f7ee;
+    --danger: #b42318;
+    --danger-light: #fef0ef;
+    --warn: #b54708;
+    --warn-light: #fdf1e3;
+    --text: #1f2937;
+    --text-secondary: #6b7280;
+    --border: #e5e7eb;
+    --bg: #f9fafb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+  header { background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%); color: #fff; padding: 48px 24px 40px; margin-bottom: 40px; }
+  header .inner { max-width: 1100px; margin: 0 auto; }
+  header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  header .sub { opacity: 0.9; font-size: 15px; }
+  header .meta { margin-top: 16px; display: flex; gap: 24px; flex-wrap: wrap; font-size: 13px; opacity: 0.85; }
+  h2 { font-size: 22px; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); color: var(--primary); }
+  h3 { font-size: 17px; margin: 24px 0 10px; }
+  p { margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 14px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden; }
+  th { background: var(--primary-light); color: var(--primary); text-align: left; padding: 10px 12px; font-weight: 600; border-bottom: 2px solid var(--primary); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafc; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .badge-open { background: var(--success-light); color: var(--success); }
+  .badge-block { background: var(--danger-light); color: var(--danger); }
+  .badge-mixed { background: var(--warn-light); color: var(--warn); }
+  .badge-default { background: #f3f4f6; color: #4b5563; }
+  .card { background: #fff; border-radius: 12px; padding: 20px 24px; margin: 16px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-left: 4px solid var(--primary); }
+  .card.success { border-left-color: var(--success); }
+  .card.danger { border-left-color: var(--danger); }
+  .card.warn { border-left-color: var(--warn); }
+  .card h3 { margin-top: 0; }
+  .code-block { background: #111827; color: #d1d5db; border-radius: 8px; padding: 16px 20px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 13px; overflow-x: auto; margin: 12px 0 20px; line-height: 1.6; }
+  .code-block .c { color: #6b7280; }
+  .code-block .k { color: #93c5fd; }
+  .code-block .v { color: #fbbf24; }
+  ul, ol { padding-left: 22px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; }
+  .highlight { background: var(--warn-light); border-radius: 4px; padding: 1px 6px; font-weight: 600; color: var(--warn); }
+  .insight { background: var(--success-light); border: 1px solid #a7f3d0; border-radius: 12px; padding: 20px 24px; margin: 20px 0; }
+  .insight h3 { color: var(--success); margin-top: 0; }
+  .insight li { margin-bottom: 8px; }
+  .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 13px; }
+  .tag { display: inline-block; font-size: 12px; background: #f3f4f6; border: 1px solid var(--border); border-radius: 6px; padding: 1px 8px; margin: 2px 4px 2px 0; color: #4b5563; }
+  .small { font-size: 13px; color: var(--text-secondary); }
+  @media (max-width: 768px) { header h1 { font-size: 22px; } table { font-size: 13px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <h1>主流网站 robots.txt 对 AI 搜索引擎/爬虫策略调研报告</h1>
+    <div class="sub">样本覆盖电商、B2B 平台、新闻媒体、社区、科技公司等 13 个站点,并对标 wlw.de 与 alibaba.com</div>
+    <div class="meta">
+      <span>📅 调研日期:2026-08-20</span>
+      <span>🔬 方法:抓取各站 robots.txt 原文 + 行业公开研究数据</span>
+      <span>🎯 目的:为 wlw.de GEO / AI 可见度策略提供参照</span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+<h2>一、核心结论(速览)</h2>
+<div class="card">
+  <ol>
+    <li><strong>行业已分化成 5 种策略模式</strong>,从"全屏蔽"到"全放行"光谱分布,<span class="highlight">B2B 平台整体最开放</span>(wlw.de / Europages / DHGate / Made-in-China 均放行 AI 爬虫),新闻媒体最保守(约 79% 屏蔽 AI 训练爬虫)。</li>
+    <li><strong>2025 年出现新趋势——"训练屏蔽、搜索放行"</strong>:eBay 率先把 LLM 训练型爬虫(GPTBot、ClaudeBot、PerplexityBot)与 AI 搜索型爬虫(OAI-SearchBot、ChatGPT-User、Claude-SearchBot)分组对待:前者只给少量官方页,后者可抓全部商品页。</li>
+    <li><strong>Alibaba 是特例</strong>:默认组未全屏蔽,但单独把 GPTBot 和 Google-Extended 关进黑名单——对 AI 训练态度保守,对未具名爬虫反而开放。</li>
+    <li><strong>wlw.de 属于最激进的"拥抱派"</strong>:与 Europages 共用同一套 robots 模板(同 CMS 架构),21 个白名单 UA 全部放行全站,未列名爬虫一律屏蔽。</li>
+  </ol>
+</div>
+
+<h2>二、样本总览:13 个站点 × AI 爬虫处理方式</h2>
+<table>
+  <tr>
+    <th>站点</th>
+    <th>类型</th>
+    <th>默认组 (*)</th>
+    <th>GPTBot / OpenAI 系</th>
+    <th>PerplexityBot</th>
+    <th>Google-Extended</th>
+    <th>ClaudeBot / Anthropic</th>
+    <th>整体模式</th>
+  </tr>
+  <tr>
+    <td><strong>wlw.de</strong></td>
+    <td>B2B 平台(德)</td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-open">Allow: /</span></td>
+    <td><span class="badge badge-open">Allow: /</span></td>
+    <td><span class="badge badge-open">Allow: /</span></td>
+    <td><span class="badge badge-open">Allow: /</span></td>
+    <td>白名单全放行</td>
+  </tr>
+  <tr>
+    <td><strong>europages.co.uk</strong></td>
+    <td>B2B 平台(欧)</td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-open">Allow: /</span></td>
+    <td><span class="badge badge-open">Allow: /</span></td>
+    <td><span class="badge badge-open">Allow: /</span></td>
+    <td><span class="badge badge-open">Allow: /</span></td>
+    <td>与 wlw 同模板</td>
+  </tr>
+  <tr>
+    <td><strong>dhgate.com</strong></td>
+    <td>跨境电商</td>
+    <td>定向屏蔽</td>
+    <td><span class="badge badge-open">Allow: /</span></td>
+    <td><span class="badge badge-default">未声明(落 *)</span></td>
+    <td><span class="badge badge-default">未声明(落 *)</span></td>
+    <td><span class="badge badge-default">未声明(落 *)</span></td>
+    <td>只放行 OpenAI 系</td>
+  </tr>
+  <tr>
+    <td><strong>made-in-china.com</strong></td>
+    <td>B2B 平台(中)</td>
+    <td>定向屏蔽</td>
+    <td><span class="badge badge-open">白名单核心页</span></td>
+    <td><span class="badge badge-open">白名单核心页</span></td>
+    <td><span class="badge badge-open">白名单核心页</span></td>
+    <td><span class="badge badge-open">白名单核心页</span></td>
+    <td>AI 大组白名单</td>
+  </tr>
+  <tr>
+    <td><strong>globalsources.com</strong></td>
+    <td>B2B 平台(港)</td>
+    <td>定向屏蔽</td>
+    <td><span class="badge badge-open">白名单+限速</span></td>
+    <td><span class="badge badge-open">白名单+限速</span></td>
+    <td><span class="badge badge-open">白名单+限速</span></td>
+    <td><span class="badge badge-open">白名单+限速</span></td>
+    <td>逐 UA 白名单+限速</td>
+  </tr>
+  <tr>
+    <td><strong>alibaba.com</strong></td>
+    <td>B2B 平台(中)</td>
+    <td>定向屏蔽(未全屏)</td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-default">未声明(落 *)</span></td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-default">未声明(落 *)</span></td>
+    <td>默认开放+局部黑名单</td>
+  </tr>
+  <tr>
+    <td><strong>ebay.com</strong></td>
+    <td>电商平台</td>
+    <td>定向屏蔽</td>
+    <td><span class="badge badge-mixed">训练屏蔽/搜索放行</span></td>
+    <td><span class="badge badge-block">仅官方页</span></td>
+    <td><span class="badge badge-block">仅官方页</span></td>
+    <td><span class="badge badge-block">仅官方页</span></td>
+    <td>训练/搜索分级</td>
+  </tr>
+  <tr>
+    <td><strong>amazon.com</strong></td>
+    <td>电商巨头</td>
+    <td>定向屏蔽</td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td>~80 个 AI 爬虫全黑</td>
+  </tr>
+  <tr>
+    <td><strong>cnn.com</strong></td>
+    <td>新闻媒体</td>
+    <td>定向屏蔽</td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td>~70 个 AI 爬虫全黑</td>
+  </tr>
+  <tr>
+    <td><strong>wikihow.com</strong></td>
+    <td>内容站(UGC)</td>
+    <td>定向屏蔽</td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td>全黑+法律声明</td>
+  </tr>
+  <tr>
+    <td><strong>theverge.com</strong></td>
+    <td>科技媒体</td>
+    <td>定向屏蔽</td>
+    <td><span class="badge badge-open">Allow: /</span></td>
+    <td><span class="badge badge-block">仅 /sp/</span></td>
+    <td><span class="badge badge-block">仅 /sp/</span></td>
+    <td><span class="badge badge-block">仅 /sp/</span></td>
+    <td>只放行 GPTBot</td>
+  </tr>
+  <tr>
+    <td><strong>github.com</strong></td>
+    <td>开发者平台</td>
+    <td>定向屏蔽</td>
+    <td><span class="badge badge-default">未声明(落 *)</span></td>
+    <td><span class="badge badge-default">未声明(落 *)</span></td>
+    <td><span class="badge badge-default">未声明(落 *)</span></td>
+    <td><span class="badge badge-default">未声明(落 *)</span></td>
+    <td>不特别处理</td>
+  </tr>
+  <tr>
+    <td><strong>indiamart.com</strong></td>
+    <td>B2B 平台(印)</td>
+    <td>定向屏蔽</td>
+    <td><span class="badge badge-open">Allow: /</span></td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td><span class="badge badge-open">Allow: /</span></td>
+    <td><span class="badge badge-block">Disallow: /</span></td>
+    <td>分名单:开 OpenAI 系</td>
+  </tr>
+</table>
+<p class="small">注:"未声明(落 *)"表示该爬虫未单列规则,实际权限取决于默认组。BBC / NYTimes / Wikipedia / Quora / Medium 等站点抓取超时未获取原文,其策略以行业研究数据补充(见第四节)。</p>
+
+<h2>三、五大策略模式详解</h2>
+
+<div class="card success">
+  <h3>模式 A:默认全关,白名单全开(拥抱派)</h3>
+  <p><strong>代表:</strong>wlw.de、europages.co.uk、dhgate.com(局部)</p>
+  <div class="code-block">
+    <span class="c"># wlw.de 模式</span><br>
+    User-agent: *<br>
+    Disallow: /<br>
+    <br>
+    User-agent: Googlebot / bingbot / <span class="v">GPTbot / ChatGPT-User / OAI-SearchBot / PerplexityBot / Google-Extended / SemrushBot / Botify</span> ...<br>
+    Allow: /
+  </div>
+  <p><strong>特征:</strong>所有未具名爬虫整站屏蔽;显式放行的白名单(含全部主流 AI 爬虫 + SEO 工具)可抓全站。</p>
+  <p><strong>逻辑:</strong>把 AI 引擎视为与 Google 同级的流量渠道,主动拥抱以换取 AI 引用可见度(与 GEO 目标一致);屏蔽杂牌爬虫以保护服务器资源与内容质量。</p>
+</div>
+
+<div class="card danger">
+  <h3>模式 B:AI 爬虫全部拒绝(保守派)</h3>
+  <p><strong>代表:</strong>Amazon(~80 个 UA 黑名单)、CNN(~70 个)、wikiHow(附法律声明)</p>
+  <div class="code-block">
+    <span class="c"># Amazon 模式(摘录)</span><br>
+    User-agent: GPTBot / CCBot / PerplexityBot / Google-Extended / ClaudeBot / ChatGPT-User / OAI-SearchBot / GrokBot / DeepSeekBot / Bytespider / ...<br>
+    Disallow: /
+  </div>
+  <p><strong>特征:</strong>黑名单覆盖几乎所有已知 AI 爬虫(训练型 + 搜索型一刀切),但 Googlebot / bingbot 等搜索引擎爬虫不受影响。</p>
+  <p><strong>逻辑:</strong>担心内容被免费用于训练或 AI 摘要分流流量;wikiHow 甚至附加了"禁止用于 AI 训练/检索,违者违反服务条款"的法律声明。</p>
+</div>
+
+<div class="card warn">
+  <h3>模式 C:训练屏蔽、搜索放行(精细化派 ⭐ 2025-26 新趋势)</h3>
+  <p><strong>代表:</strong>eBay(最典型)、IndiaMART(近似)</p>
+  <div class="code-block">
+    <span class="c"># eBay 模式(摘录)</span><br>
+    <span class="c"># LLM / AI bot directives —— 训练型:整站拒绝,只给少量官方页</span><br>
+    User-agent: GPTBot / PerplexityBot / ClaudeBot / anthropic-ai / CCBot / Bytespider / Applebot-Extended / meta-externalagent ...<br>
+    Disallow: /<br>
+    Allow: /help&nbsp;&nbsp;/sellercenter&nbsp;&nbsp;/motors/blog&nbsp;&nbsp;/giftcards ...<br>
+    <br>
+    <span class="c"># AI 搜索型:与搜索引擎同权,可抓全部商品页</span><br>
+    User-agent: OAI-SearchBot / ChatGPT-User / Claude-SearchBot / Claude-User<br>
+    <span class="c">(继承 * 组的全部 Allow/Disallow 规则)</span>
+  </div>
+  <p><strong>特征:</strong>明确区分两类 AI 爬虫:</p>
+  <ul>
+    <li><strong>训练型</strong>(GPTBot、ClaudeBot、PerplexityBot、anthropic-ai、CCBot 等)→ 屏蔽,只放行少量品牌/帮助页面;</li>
+    <li><strong>搜索型</strong>(OAI-SearchBot、ChatGPT-User、Claude-SearchBot)→ 与普通搜索引擎同等权限,可抓商品详情页。</li>
+  </ul>
+  <p><strong>逻辑:</strong>AI 搜索引用能带来真实流量(属于 GEO 收益),但免费训练则是纯成本——"引用欢迎,训练免谈"。</p>
+</div>
+
+<div class="card success">
+  <h3>模式 D:定向白名单 + 限速(工程派)</h3>
+  <p><strong>代表:</strong>Global Sources(每个 AI 爬虫独立一组 + crawl-delay 10~20s)、Made-in-China(AI 大组白名单)</p>
+  <div class="code-block">
+    <span class="c"># Global Sources 模式(摘录)</span><br>
+    User-agent: PerplexityBot / Perplexity-User<br>
+    Allow: /$ &nbsp; /category/ &nbsp; /knowledge/ &nbsp; /helpCenter/ &nbsp; /*/company-profile &nbsp; /*p.htm &nbsp; /*.xml*<br>
+    Disallow: /<br>
+    Crawl-delay: 20<br>
+    <br>
+    <span class="c"># Made-in-China 模式(摘录)</span><br>
+    User-agent: GPTBot / OAI-SearchBot / ChatGPT-User / Google-Extended / ClaudeBot / GrokBot / PerplexityBot / Applebot-Extended / CCBot ...<br>
+    Allow: /products-search/ &nbsp; /manufacturers/ &nbsp; /factory/ &nbsp; /help/ &nbsp; /faq/<br>
+    Disallow: /products-search/ai-mode/
+  </div>
+  <p><strong>特征:</strong>AI 爬虫可抓,但只开放"核心索引资产"子集(类目页、公司档案、知识库),并设置爬取延迟保护资源;Made-in-China 甚至把自家的 AI 搜索功能页单独屏蔽。</p>
+  <p><strong>逻辑:</strong>既要 AI 可见度,又要控制爬取成本与服务器负载——用 Allow 白名单而非 Disallow 黑名单来表达"欢迎但有限"。</p>
+</div>
+
+<div class="card warn">
+  <h3>模式 E:不特别处理(佛系派/早期默认态)</h3>
+  <p><strong>代表:</strong>GitHub、Alibaba 的默认组</p>
+  <p><strong>特征:</strong>robots.txt 中没有 AI 爬虫专属规则,AI 爬虫与所有未具名爬虫共用默认组(通常只屏蔽功能页/参数页,主体内容默认可抓)。</p>
+  <p><strong>逻辑:</strong>可能是历史遗留(2023 年前的默认状态)、不想维护庞大黑名单,或认为屏蔽对 AI 可见度弊大于利。注意 <strong>Alibaba 是"模式 E 的变体"</strong>:默认组开放,但单独把 GPTBot 和 Google-Extended 拉黑——宁可让杂牌爬虫抓,也不让 OpenAI 训练。</p>
+</div>
+
+<h2>四、行业统计数据(新闻媒体最保守)</h2>
+<table>
+  <tr>
+    <th>统计口径</th>
+    <th>结论</th>
+    <th>来源</th>
+  </tr>
+  <tr>
+    <td>10 国顶级新闻站(2023 底)</td>
+    <td><strong>48% 屏蔽 OpenAI 爬虫</strong>,24% 屏蔽 Google AI 爬虫;97% 屏蔽 Google AI 的也屏蔽 OpenAI</td>
+    <td>Reuters Institute</td>
+  </tr>
+  <tr>
+    <td>按国家</td>
+    <td>美国 79% 屏蔽 OpenAI;墨西哥/波兰仅 20%;德国屏蔽 Google AI 比例最高(60%)</td>
+    <td>Reuters Institute</td>
+  </tr>
+  <tr>
+    <td>按媒体类型</td>
+    <td>老牌纸媒 57% 屏蔽 &gt; 广电 48% &gt; 数字原生 31%</td>
+    <td>Reuters Institute</td>
+  </tr>
+  <tr>
+    <td>英美顶级新闻站(2025)</td>
+    <td><strong>79% 屏蔽至少一个 AI 训练爬虫</strong>(GPTBot / ClaudeBot / PerplexityBot 等)</td>
+    <td>Press Gazette</td>
+  </tr>
+  <tr>
+    <td>行业动态</td>
+    <td>Reuters、Time 等已转向"默认屏蔽 + 白名单放行";部分媒体与 OpenAI 达成授权合作(如 Axel Springer)</td>
+    <td>Search Engine Journal</td>
+  </tr>
+</table>
+
+<h2>五、关键洞察与对 wlw.de 的启示</h2>
+<div class="insight">
+  <h3>洞察 1:B2B 平台是 AI 爬虫政策最开放的行业</h3>
+  <ul>
+    <li>样本内 6 个 B2B/跨境平台中,5 个(wlw、Europages、DHGate、Made-in-China、Global Sources、IndiaMART 部分)对 AI 搜索爬虫持放行态度,与新闻媒体(79% 屏蔽)形成鲜明反差。</li>
+    <li>原因推测:B2B 平台的询盘/供应商线索价值高,AI 引用带来的精准 B2B 流量转化价值大;且 B2B 内容(公司档案、产品目录)对 AI 训练的商业威胁感弱于新闻内容。</li>
+  </ul>
+  <h3>洞察 2:"训练/搜索二分法"是 2026 年的行业新共识</h3>
+  <ul>
+    <li>eBay 的分级模式(训练型屏蔽、搜索型放行)正在成为精细化标杆;wikiHow/Amazon 的一刀切屏蔽反而显得过时——因为它同时放弃了 AI 搜索的引用流量。</li>
+    <li>wlw.de 目前对训练型(GPTBot/ClaudeBot/PerplexityBot)与搜索型(OAI-SearchBot/ChatGPT-User)一视同仁全部放行,若担心内容被免费训练,可借鉴 eBay 做分级。</li>
+  </ul>
+  <h3>洞察 3:wlw.de 与 Europages 共享同一 robots 模板</h3>
+  <ul>
+    <li>两者规则几乎逐行一致(白名单 UA 完全重合、Disallow 列表同构),确认是同一 CMS/运营团队管理——这意味着模板化改动的波及面是两站,需要一并评估。</li>
+  </ul>
+  <h3>洞察 4:阿里是"反向操作"的特例,值得关注其效果</h3>
+  <ul>
+    <li>Alibaba 屏蔽 GPTBot/Google-Extended 但放行 Perplexity(落默认组)——它的 AI 引用流量结构可能与 wlw 完全不同(Perplexity 占比高、ChatGPT 占比低)。</li>
+    <li>结合之前的 alibaba_geo 截图,若其 GEO 流量表现依旧强劲,说明"选择性屏蔽"不会明显伤害 AI 可见度,可作为 wlw 决策的参考证据。</li>
+  </ul>
+  <h3>洞察 5:技术性细节值得学习</h3>
+  <ul>
+    <li><strong>限速:</strong>Global Sources 给 AI 爬虫加 Crawl-delay 10~20s,WLW 目前无此设置——AI 爬虫突发抓取可能挤压服务器资源;</li>
+    <li><strong>路径白名单:</strong>Made-in-China 只开放核心索引资产(/products-search/、/manufacturers/、/factory/),WLW 是"全站开放 + 黑名单"思路,可对比评估是否值得改为白名单;</li>
+    <li><strong>法律声明:</strong>wikiHow 在 robots.txt 顶部附版权/训练禁令声明(虽无强制力,但有诉讼辅助价值),WLW 可考虑补充。</li>
+  </ul>
+</div>
+
+<h2>六、wlw.de 可选优化方向(供讨论)</h2>
+<table>
+  <tr>
+    <th>方向</th>
+    <th>做法</th>
+    <th>风险/收益</th>
+  </tr>
+  <tr>
+    <td>维持现状</td>
+    <td>白名单全放行 AI 爬虫</td>
+    <td>GEO 可见度最大化;风险是内容可被免费训练,AI 摘要可能分流点击</td>
+  </tr>
+  <tr>
+    <td>学习 eBay 分级</td>
+    <td>训练型(GPTBot/ClaudeBot/PerplexityBot)→ 屏蔽或仅放品牌页;搜索型(OAI-SearchBot/ChatGPT-User/Claude-SearchBot)→ 维持全站</td>
+    <td>平衡训练风险与引用流量;改动小(仅需调整分组)</td>
+  </tr>
+  <tr>
+    <td>学习 Global Sources 限速</td>
+    <td>为 AI 爬虫组加 Crawl-delay 10~20s</td>
+    <td>保护服务器资源;对 AI 可见度基本无影响</td>
+  </tr>
+  <tr>
+    <td>学习 Made-in-China 白名单</td>
+    <td>只开放核心资产(公司页、类目页、知识内容),屏蔽低质/重复页</td>
+    <td>提升 AI 抓取质量密度;需评估现有索引资产结构</td>
+  </tr>
+  <tr>
+    <td>增加法律声明</td>
+    <td>robots.txt 头部补充内容使用条款</td>
+    <td>低成本;为潜在诉讼/授权谈判积累筹码</td>
+  </tr>
+</table>
+
+<div class="footer">
+  <p><strong>调研方法与局限:</strong>2026-08-20 通过直接抓取 13 个站点 robots.txt 原文分析;BBC、NYTimes、Wikipedia、Quora、Medium 等站点因访问超时未能获取原文,其策略以 Reuters Institute、Press Gazette、SEJ 公开研究数据补充(数据时点为 2023-2025)。robots.txt 只是内容控制第一层,各站还可能使用 meta robots、页面级 noai 标签、Cloudflare 等流量管控。</p>
+  <p><strong>关联资料:</strong>wlw.de robots.txt 解析(本会话)、alibaba.com robots.txt 解析(本会话)、docs/alibaba_geo_*.png</p>
+</div>
+
+</div>
+</body>
+</html>
