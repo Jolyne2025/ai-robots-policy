@@ -73,12 +73,12 @@
 <header>
   <div class="inner">
     <h1>wlw.de robots.txt AI 爬虫策略优化方案</h1>
-    <div class="sub">已确认方案(2026-08-20):训练型爬虫温和版(全站+限速)+ Europages 同步 + 季度 review;文末附录含 13 站点行业调研</div>
+    <div class="sub">训练型爬虫温和版(全站+Crawl-delay 10s)+ 公共语料爬虫拉黑 + Europages 同步 + 季度 review;Crawl-delay 调研与决策过程见关联文档</div>
     <div class="meta">
       <span>📅 编制日期:2026-08-20</span>
       <span>👤 编制人:Jolyne(SEO/GEO)</span>
       <span>🌐 影响站点:wlw.de + europages.*(同模板)</span>
-      <span>📌 状态:决策已确认,执行中(工单 UC-494)</span>
+      <span>🔗 关联文档:<a href="ai_robots_crawl_delay_decision_20260820.html" style="color:#fff;">Crawl-delay 调研与决策过程</a></span>
     </div>
   </div>
 </header>
@@ -109,7 +109,7 @@
     <tr><td>Amazon Rufus</td><td>Amazonbot / amzn-searchbot / amzn-user</td><td>搜索</td><td>⭐⭐ B2B 采购场景</td></tr>
     <tr><td>Apple</td><td>Applebot / Applebot-Extended</td><td>搜索+训练</td><td>⭐⭐ Apple 生态</td></tr>
     <tr><td>字节跳动</td><td>Bytespider</td><td>训练</td><td>⭐ 豆包生态</td></tr>
-    <tr><td>Common Crawl</td><td>CCBot / AI2Bot / Ai2Bot-Dolma</td><td>训练</td><td>— 模型训练语料</td></tr>
+    <tr><td>Common Crawl</td><td>CCBot / AI2Bot / Ai2Bot-Dolma</td><td>训练</td><td>— 语料批发(维持屏蔽:语料公开可下载,不可逆)</td></tr>
     <tr><td>其他</td><td>MistralAI-User / cohere-ai / DuckAssistBot / YouBot</td><td>混合</td><td>⭐ 长尾覆盖</td></tr>
   </table>
   <p class="small">影响:随着 B2B 采购决策者转向 AI 搜索(Claude 引用、Grok 等),wlw 在这些渠道将完全不可见,直接损失潜在询盘流量。</p>
@@ -125,7 +125,7 @@
   <p>全站放行且无 <code>Crawl-delay</code>;白名单自建站以来未系统性更新,新增 AI 爬虫无评估流程。另外 wlw 与 europages.* 共用同一 robots 模板,<strong>任何改动影响两站</strong>,需一并评估。</p>
 </div>
 
-<h2>三、方案总览(推荐 B 档)</h2>
+<h2>三、方案总览(B 档)</h2>
 <table>
   <tr>
     <th>档位</th>
@@ -135,33 +135,20 @@
     <th>适用</th>
   </tr>
   <tr>
-    <td><strong>A 档:最小修复</strong></td>
-    <td>仅补齐白名单(新增 15+ 个 AI UA 并入现有白名单组)</td>
-    <td>低(0.5 天)</td>
-    <td>低</td>
-    <td>只想快速止血</td>
-  </tr>
-  <tr>
     <td><strong>B 档:分级管控</strong> ⭐推荐</td>
     <td>A 档全部内容 + 训练/搜索分组 + 关键爬虫限速</td>
     <td>中(2-3 天)</td>
     <td>低-中</td>
     <td>既保可见度又控风险,匹配当前业务</td>
   </tr>
-  <tr>
-    <td><strong>C 档:深度治理</strong></td>
-    <td>B 档全部内容 + 核心路径白名单(仅放公司页/类目页)+ 法律声明 + 季度 review 机制</td>
-    <td>高(1-2 周)</td>
-    <td>中</td>
-    <td>内容资产敏感度高、资源受限时</td>
-  </tr>
 </table>
+<p class="small">其他档位(A 档最小修复 / C 档深度治理)见附录七。</p>
 
 <div class="insight">
   <h3>推荐理由(B 档)</h3>
   <ul>
-    <li><strong>业务目标匹配</strong>:GEO 核心 KPI 是 AI 引用流量(此前 UC-475/UC-477 已证明 ChatGPT/Perplexity 引用是有价值渠道),B 档确保所有主流 AI 搜索爬虫全站可抓——引用可见度最大化;</li>
-    <li><strong>风险可控</strong>:仅对"纯训练型"(GPTbot、ClaudeBot、anthropic-ai、CCBot、Bytespider、cohere-ai、Applebot-Extended)做分级——可保留全站放行但加限速(温和版),或降级为仅核心路径(保守版),<strong>两版都给出规则,由团队拍板</strong>;</li>
+    <li><strong>业务目标匹配</strong>:GEO 核心 KPI 是 AI 引用流量(ChatGPT/Perplexity 引用已被验证为有价值渠道),B 档确保所有主流 AI 搜索爬虫全站可抓——引用可见度最大化;</li>
+    <li><strong>风险可控</strong>:仅对"纯训练型"(GPTbot、ClaudeBot、anthropic-ai、CCBot、Bytespider、cohere-ai、Applebot-Extended)做分级——可保留全站放行但加限速(温和版),或降级为仅核心路径(保守版),<strong>两版规则均给出</strong>;</li>
     <li><strong>改动集中</strong>:核心是重排现有白名单组 + 新增两个组,不触碰功能页 Disallow 清单,不影响 Googlebot/bingbot 行为,对自然搜索零风险;</li>
     <li><strong>成本低</strong>:robots.txt 是 CMS 配置,发布链路与现有 SEO 变更一致,无需开发。</li>
   </ul>
@@ -186,13 +173,19 @@
   </tr>
   <tr>
     <td rowspan="2"><span class="badge badge-mixed">T 级</span><br>训练型<br>(二选一)</td>
-    <td><strong>温和版(默认推荐):</strong>全站放行 + <code>Crawl-delay: 20</code></td>
-    <td rowspan="2">GPTbot、ClaudeBot、anthropic-ai、CCBot、AI2Bot、Bytespider、cohere-ai、Applebot-Extended、SemrushBot(已有,建议加限速)</td>
+    <td><strong>温和版(默认推荐):</strong>全站放行 + <code>Crawl-delay: 10</code></td>
+    <td rowspan="2">GPTbot、ClaudeBot、anthropic-ai、Bytespider、cohere-ai、Applebot-Extended、SemrushBot(已有,建议加限速)</td>
     <td>保留在模型训练语料中的存在感(利于未来 AI 原生检索),限速保护资源</td>
   </tr>
   <tr>
-    <td><strong>保守版:</strong>仅放行核心路径(<code>Allow: /de/firmen/</code>、<code>Allow: *utm_source=*</code>)+ <code>Crawl-delay: 20</code></td>
+    <td><strong>保守版:</strong>仅放行核心路径(<code>Allow: /de/firmen/</code>、<code>Allow: *utm_source=*</code>)+ <code>Crawl-delay: 10</code></td>
     <td>对标 eBay:训练型不给全站,防止内容被无约束利用</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-block">P 级</span><br>公共语料型<br>(单独屏蔽)</td>
+    <td>单独 <code>Disallow: /</code>(不并入任何放行组)</td>
+    <td>CCBot、AI2Bot、Ai2Bot-Dolma</td>
+    <td>Common Crawl 语料库公开可下载:一次抓取 = 无限分发且不可逆;不带来任何引用流量,拉黑零收益损失</td>
   </tr>
   <tr>
     <td><span class="badge badge-block">X 级</span><br>不放行</td>
@@ -202,48 +195,55 @@
   </tr>
 </table>
 
-<div class="decision">
-  <h3>✅ 决策已确认(2026-08-20,见 UC-494)</h3>
+<div class="card success">
+  <h3>方案要点(T 级训练型)</h3>
   <ol>
-    <li><strong>训练型爬虫:温和版</strong>(全站放行 + Crawl-delay: 20),先跑一个季度看数据;</li>
-    <li><strong>Crawl-delay:加</strong>,对遵守者生效,不遵守的靠日志监控兜底;</li>
+    <li><strong>训练型爬虫:温和版</strong>(全站放行 + Crawl-delay: 10),先运行一个季度观察数据;</li>
+    <li><strong>Crawl-delay: 10s</strong>;仅写爬虫专属段、不写通配段;遵守程度按官方声明分三档标注,不遵守者靠日志监控兜底;</li>
+    <li><strong>公共语料爬虫(CCBot/AI2Bot)单独拉黑</strong>——Common Crawl 语料任何人可下载,数据一旦进入不可逆;不带来引用流量,拉黑零收益损失;</li>
+    <li><strong>GPTBot 归属:T 级训练型</strong>(放组 2 加限速,不放组 1);</li>
     <li><strong>Europages 同步发布</strong>——两站同模板,避免口径分裂;</li>
     <li><strong>robots.txt 维护:Harry(窦晓宇)</strong>;AI 爬虫清单 review 纳入季度 SEO 例行。</li>
   </ol>
 </div>
 
-<h2>五、落地规则示例(B 档 · 已确认温和版)</h2>
+<h2>五、落地规则示例(B 档 · 温和版)</h2>
 <p>在现有文件基础上:保留默认组与原有 Disallow 清单,重排白名单为三个组(仅示意关键差异,完整 Disallow 清单沿用现有文件):</p>
 <div class="code-block">
 <span class="c"># ── 组 1:搜索引擎 + S 级 AI 搜索引用型(全站放行)──</span><br>
 User-agent: Googlebot / Googlebot-Image / AdsBot-Google / Storebot-Google / Google-InspectionTool / GoogleOther / Mediapartners-Google / bingbot / YandexBot<br>
 User-agent: Google-Extended<br>
-User-agent: OAI-SearchBot / ChatGPT-User / GPTbot<br>
+User-agent: OAI-SearchBot / ChatGPT-User<br>
 User-agent: PerplexityBot / Perplexity-User<br>
 User-agent: Claude-SearchBot / Claude-User<br>
 User-agent: GrokBot / xAI-Grok / Grok-DeepSearch / DeepSeekBot / Gemini-Deep-Research<br>
 User-agent: meta-externalagent / Amazonbot / amzn-searchbot / Applebot / DuckAssistBot / MistralAI-User<br>
-User-agent: SemrushBot / Botify<br>
+User-agent: Botify<br>
 Allow: /<br>
 Allow: *utm_source=*<br>
 Allow: */page/1 ... Allow: */page/9<br>
 <span class="c"># ...(沿用现有全部 Disallow 清单)</span><br>
 <br>
 <span class="c"># ── 组 2:T 级 训练型(全站放行 + 限速,温和版)──</span><br>
-User-agent: ClaudeBot / anthropic-ai / CCBot / AI2Bot / Bytespider / cohere-ai / Applebot-Extended<br>
+User-agent: GPTBot / ClaudeBot / anthropic-ai / Bytespider / cohere-ai / Applebot-Extended / SemrushBot<br>
 Allow: /<br>
 Allow: *utm_source=*<br>
 Disallow: <span class="c"># 沿用现有功能页 Disallow 清单</span><br>
-Crawl-delay: 20<br>
+Crawl-delay: 10<br>
+<span class="c"># 遵守预期:ClaudeBot/anthropic-ai、SemrushBot 官方确认遵守;GPTBot/Bytespider/cohere-ai 未官方确认(存疑);Applebot-Extended 官方确认不遵守</span><br>
 <br>
 <span class="c"># ── 组 3:T 级 保守版(替换组 2 时使用:仅核心路径)──</span><br>
-User-agent: ClaudeBot / anthropic-ai / CCBot / AI2Bot / Bytespider / cohere-ai / Applebot-Extended<br>
+User-agent: GPTBot / ClaudeBot / anthropic-ai / Bytespider / cohere-ai / Applebot-Extended / SemrushBot<br>
 Allow: /de/firmen/<br>
 Allow: /de/firmenverzeichnis/<br>
 Allow: *utm_source=*<br>
 Disallow: /<br>
-Crawl-delay: 20<br>
+Crawl-delay: 10<br>
 <span class="c"># 注:核心路径需与业务确认实际高价值目录(公司页/类目页),上线前用真实 URL 验证</span><br>
+<br>
+<span class="c"># ── 组 4:P 级 公共语料型(单独屏蔽:语料库公开可下载,一次抓取 = 无限分发且不可逆)──</span><br>
+User-agent: CCBot / AI2Bot / Ai2Bot-Dolma<br>
+Disallow: /<br>
 <br>
 <span class="c"># ── 默认组(不变)──</span><br>
 User-agent: *<br>
@@ -254,8 +254,8 @@ Disallow: /
 <div class="step">
   <div class="step-num">1</div>
   <div class="step-body">
-    <h3>决策确认(0.5 天)</h3>
-    <p>与团队对齐第四节三个决策点(训练型档位、Crawl-delay、Europages 同步);确认核心路径清单(若选保守版)。</p>
+    <h3>方案对齐与路径确认(0.5 天)</h3>
+    <p>与团队对齐第四节方案要点(训练型档位、Crawl-delay、Europages 同步);若后续切换保守版,需确认核心路径清单。</p>
   </div>
 </div>
 <div class="step">
@@ -277,6 +277,7 @@ Disallow: /
   <div class="step-body">
     <h3>观察与监控(上线后 2 周)</h3>
     <p>监控爬虫日志:新增 UA 是否开始抓取、抓取量曲线、4xx/5xx 率、服务器资源水位;确认 Googlebot 行为无变化。</p>
+    <p><strong>Crawl-delay 遵守验证(上线后 7 天内)</strong>:按 UA 统计相邻请求间隔,与设定值(10s)对照,产出"各爬虫实际间隔 vs 设定值"对照表;间隔 ≥ 9s 判定为遵守,未达标者标记为不遵守,靠日志告警/WAF 兜底。对照表纳入季度 review。</p>
   </div>
 </div>
 <div class="step">
@@ -355,17 +356,8 @@ Disallow: /
   </tr>
 </table>
 
-<h2>九、已确认决策与执行状态(2026-08-20)</h2>
-<ol>
-  <li>训练型爬虫选 <strong>温和版(全站+限速)</strong> ✅ —— 已确认,按第五节组 2 落地;</li>
-  <li>是否同步发布到 europages.* ✅ —— 同步发布,两站同模板;</li>
-  <li>核心高价值路径清单 —— 已选温和版,保守版清单不再需要;</li>
-  <li>robots.txt 维护 ✅ —— Harry(窦晓宇)负责,CMS 发布窗口与 Harry 对齐;</li>
-  <li>季度 review ✅ —— "AI 爬虫清单 review"纳入季度 SEO 例行,工单 UC-494 已建。</li>
-</ol>
-
 <h2>附录:行业调研(13 站点 robots.txt 对 AI 爬虫的处理方式)</h2>
-<p class="small">调研方法:2026-08-20 直接抓取各站 robots.txt 原文 + 行业公开研究数据。本附录为方案背景资料,先看方案一~九节,再按需查阅。</p>
+<p class="small">调研方法:2026-08-20 直接抓取各站 robots.txt 原文 + 行业公开研究数据。本附录为方案背景资料,先看方案正文,再按需查阅。</p>
 
 
 <h2>附录一、核心结论(速览)</h2>
@@ -374,7 +366,7 @@ Disallow: /
     <li><strong>行业已分化成 5 种策略模式</strong>,从"全屏蔽"到"全放行"光谱分布,<span class="highlight">B2B 平台整体最开放</span>(wlw.de / Europages / DHGate / Made-in-China 均放行 AI 爬虫),新闻媒体最保守(约 79% 屏蔽 AI 训练爬虫)。</li>
     <li><strong>2025 年出现新趋势——"训练屏蔽、搜索放行"</strong>:eBay 率先把 LLM 训练型爬虫(GPTBot、ClaudeBot、PerplexityBot)与 AI 搜索型爬虫(OAI-SearchBot、ChatGPT-User、Claude-SearchBot)分组对待:前者只给少量官方页,后者可抓全部商品页。</li>
     <li><strong>Alibaba 是特例</strong>:默认组未全屏蔽,但单独把 GPTBot 和 Google-Extended 关进黑名单——对 AI 训练态度保守,对未具名爬虫反而开放。</li>
-    <li><strong>wlw.de 属于最激进的"拥抱派"</strong>:与 Europages 共用同一套 robots 模板(同 CMS 架构),21 个白名单 UA 全部放行全站,未列名爬虫一律屏蔽。</li>
+    <li><strong>wlw.de 是"对已知 AI 全开放、对未知爬虫全屏蔽"的双极端模式</strong>:白名单内 AI 爬虫全站放行(13 站中最开放),但默认组 <code>Disallow: /</code> 在 13 站中仅有 wlw/ep 两家采用(其余 11 家均为定向屏蔽,默认组相对开放)。<span class="highlight">这意味着任何新出现的 AI 爬虫都会被默认屏蔽——这是方案要解决的核心问题</span>。</li>
   </ol>
 </div>
 
@@ -525,9 +517,9 @@ Disallow: /
 
 <h2>附录三、五大策略模式详解</h2>
 
-<div class="card success">
-  <h3>模式 A:默认全关,白名单全开(拥抱派)</h3>
-  <p><strong>代表:</strong>wlw.de、europages.co.uk、dhgate.com(局部)</p>
+<div class="card warn">
+  <h3>模式 A:默认全关,白名单全开(已知拥抱 / 未知屏蔽)</h3>
+  <p><strong>代表:</strong>wlw.de、europages.co.uk(<strong>13 站中仅有的两家默认全屏蔽</strong>)</p>
   <div class="code-block">
     <span class="c"># wlw.de 模式</span><br>
     User-agent: *<br>
@@ -536,8 +528,8 @@ Disallow: /
     User-agent: Googlebot / bingbot / <span class="v">GPTbot / ChatGPT-User / OAI-SearchBot / PerplexityBot / Google-Extended / SemrushBot / Botify</span> ...<br>
     Allow: /
   </div>
-  <p><strong>特征:</strong>所有未具名爬虫整站屏蔽;显式放行的白名单(含全部主流 AI 爬虫 + SEO 工具)可抓全站。</p>
-  <p><strong>逻辑:</strong>把 AI 引擎视为与 Google 同级的流量渠道,主动拥抱以换取 AI 引用可见度(与 GEO 目标一致);屏蔽杂牌爬虫以保护服务器资源与内容质量。</p>
+  <p><strong>特征:</strong>对白名单内 AI 爬虫全站放行(拥抱已知),对未具名爬虫整站屏蔽(拒绝未知)。</p>
+  <p><strong>风险:</strong>双极端模式的两面——白名单内 AI 引擎获得与 Google 同级的引用可见度(GEO 收益);但默认全屏蔽导致<strong>新出现的 AI 爬虫全部进不来</strong>,AI 爬虫迭代快于白名单更新时持续掉队。其余 11 家站点默认组均相对开放,未具名爬虫至少能抓主体内容。</p>
 </div>
 
 <div class="card danger">
@@ -638,7 +630,7 @@ Disallow: /
 <div class="insight">
   <h3>洞察 1:B2B 平台是 AI 爬虫政策最开放的行业</h3>
   <ul>
-    <li>样本内 6 个 B2B/跨境平台中,5 个(wlw、Europages、DHGate、Made-in-China、Global Sources、IndiaMART 部分)对 AI 搜索爬虫持放行态度,与新闻媒体(79% 屏蔽)形成鲜明反差。</li>
+    <li>样本内 6 个 B2B/跨境平台中,5 个对 AI 搜索爬虫持放行态度(白名单内),与新闻媒体(79% 屏蔽)形成鲜明反差。<strong>但注意:wlw/ep 是其中仅有的"默认全屏蔽"站点,其余平台默认组均相对开放</strong>——"B2B 最开放"指的是对已知 AI 爬虫的放行姿态,不代表默认组开放。</li>
     <li>原因推测:B2B 平台的询盘/供应商线索价值高,AI 引用带来的精准 B2B 流量转化价值大;且 B2B 内容(公司档案、产品目录)对 AI 训练的商业威胁感弱于新闻内容。</li>
   </ul>
   <h3>洞察 2:"训练/搜索二分法"是 2026 年的行业新共识</h3>
@@ -682,7 +674,7 @@ Disallow: /
   </tr>
   <tr>
     <td>学习 Global Sources 限速</td>
-    <td>为 AI 爬虫组加 Crawl-delay 10~20s</td>
+    <td>为 AI 爬虫组加 Crawl-delay 10~20s(落地统一 10s,见第三节方案要点)</td>
     <td>保护服务器资源;对 AI 可见度基本无影响</td>
   </tr>
   <tr>
@@ -697,14 +689,40 @@ Disallow: /
   </tr>
 </table>
 
+<h2>附录七、备选方案档位(A 档 / C 档)</h2>
+<p class="small">本方案采用 B 档(分级管控)。以下为备选档位,供后续调整时参照:</p>
+<table>
+  <tr>
+    <th>档位</th>
+    <th>内容</th>
+    <th>工作量</th>
+    <th>风险</th>
+    <th>适用</th>
+  </tr>
+  <tr>
+    <td><strong>A 档:最小修复</strong></td>
+    <td>仅补齐白名单(新增 15+ 个 AI UA 并入现有白名单组)</td>
+    <td>低(0.5 天)</td>
+    <td>低</td>
+    <td>只想快速止血</td>
+  </tr>
+  <tr>
+    <td><strong>C 档:深度治理</strong></td>
+    <td>B 档全部内容 + 核心路径白名单(仅放公司页/类目页)+ 法律声明 + 季度 review 机制</td>
+    <td>高(1-2 周)</td>
+    <td>中</td>
+    <td>内容资产敏感度高、资源受限时</td>
+  </tr>
+</table>
+
 
 
 <div class="footer">
   <p><strong>附录·调研方法与局限:</strong>2026-08-20 通过直接抓取 13 个站点 robots.txt 原文分析;BBC、NYTimes、Wikipedia、Quora、Medium 等站点因访问超时未能获取原文,其策略以 Reuters Institute、Press Gazette、SEJ 公开研究数据补充(数据时点为 2023-2025)。robots.txt 只是内容控制第一层,各站还可能使用 meta robots、页面级 noai 标签、Cloudflare 等流量管控。</p>
-  <p><strong>关联资料:</strong>wlw.de robots.txt 解析(本会话)、alibaba.com robots.txt 解析(本会话)、docs/alibaba_geo_*.png</p>
+  <p><strong>关联资料:</strong>wlw.de robots.txt 解析、alibaba.com robots.txt 解析、docs/alibaba_geo_*.png</p>
 </div>
 <div class="footer">
-  <p><strong>关联文档:</strong>本文件附录(13 站点行业调研)、wlw.de / alibaba.com robots.txt 解析(2026-08-20 会话)、工单 UC-494</p>
+  <p><strong>关联文档:</strong>本文件附录(13 站点行业调研)、wlw.de / alibaba.com robots.txt 解析、Crawl-delay 调研与决策过程</p>
   <p><strong>数据口径:</strong>AI 引用流量分析沿用 SEO/GEO 日报口径(Redash + GSC,T-3 时效)</p>
 </div>
 
